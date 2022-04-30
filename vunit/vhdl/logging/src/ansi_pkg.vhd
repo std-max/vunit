@@ -67,8 +67,6 @@ package ansi_pkg is
   procedure disable_colors;
   procedure enable_colors;
 
-  procedure ansi_color_demo;
-
 end package;
 
 package body ansi_pkg is
@@ -161,9 +159,9 @@ package body ansi_pkg is
   end function;
 
   impure function colorize(msg : string;
-                    fg : ansi_color_t := no_color;
-                    bg : ansi_color_t := no_color;
-                    style : ansi_style_t := normal) return string is
+                           fg : ansi_color_t := no_color;
+                           bg : ansi_color_t := no_color;
+                           style : ansi_style_t := normal) return string is
   begin
     if fg = no_color and bg = no_color and style = normal then
       return msg;
@@ -199,26 +197,6 @@ package body ansi_pkg is
       return "";
     end if;
   end function;
-
-  procedure ansi_color_demo is
-    variable l : line;
-  begin
-    for bg in ansi_color_t'low to ansi_color_t'high loop
-      write(l, colorize("bg=" & ansi_color_t'image(bg), bg => bg));
-      writeline(output, l);
-    end loop;
-
-    for style in ansi_style_t'low to ansi_style_t'high loop
-      for fg in ansi_color_t'low to ansi_color_t'high loop
-        write(l, colorize(
-          "fg=" & ansi_color_t'image(fg) & ", " &
-          "style=" & ansi_style_t'image(style),
-          fg => fg, style => style));
-        writeline(output, l);
-      end loop;
-    end loop;
-
-  end procedure;
 
   procedure disable_colors is
   begin
