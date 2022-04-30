@@ -31,14 +31,12 @@ package ansi_pkg is
     lightblue,
     lightmagenta,
     lightcyan,
-    lightwhite
-    );
+    lightwhite);
 
   type ansi_style_t is (
     dim,
     normal,
-    bright
-    );
+    bright);
 
   type ansi_colors_t is record
     fg : ansi_color_t;
@@ -70,15 +68,17 @@ package ansi_pkg is
   procedure enable_colors;
 
   procedure ansi_color_demo;
+
 end package;
 
 package body ansi_pkg is
+
   constant colors_enabled : string_ptr_t := new_string_ptr("0");
 
   impure function colors_are_enabled return boolean is
   begin
     return get(colors_enabled, 1) = '1';
-  end;
+  end function;
 
   type color_to_code_t is array (ansi_color_t range <>) of integer;
   type style_to_code_t is array (ansi_style_t range <>) of integer;
@@ -113,7 +113,7 @@ package body ansi_pkg is
                     colors : ansi_colors_t := no_colors) return string is
   begin
     return colorize(msg, fg => colors.fg, bg => colors.bg, style => colors.style);
-  end;
+  end function;
 
   impure function length_without_color(msg : string) return natural is
     variable idx : natural := msg'low;
@@ -135,7 +135,7 @@ package body ansi_pkg is
     end loop;
 
     return len;
-  end;
+  end function;
 
   impure function drop_color(msg : string) return string is
   begin
@@ -147,7 +147,7 @@ package body ansi_pkg is
 
     assert false report "incomplete color escape did not end with 'm'";
     return msg;
-  end;
+  end function;
 
   impure function strip_color(msg : string) return string is
   begin
@@ -158,7 +158,7 @@ package body ansi_pkg is
     end loop;
 
     return msg;
-  end;
+  end function;
 
   impure function colorize(msg : string;
                     fg : ansi_color_t := no_color;
@@ -170,12 +170,12 @@ package body ansi_pkg is
     else
       return color_start(fg, bg, style) & msg & color_end;
     end if;
-  end;
+  end function;
 
   impure function color_start(colors : ansi_colors_t := no_colors) return string is
   begin
     return color_start(fg => colors.fg, bg => colors.bg, style => colors.style);
-  end;
+  end function;
 
   impure function color_start(fg : ansi_color_t := no_color;
                               bg : ansi_color_t := no_color;
@@ -189,7 +189,7 @@ package body ansi_pkg is
     else
       return "";
     end if;
-  end;
+  end function;
 
   impure function color_end return string is
   begin
@@ -223,11 +223,11 @@ package body ansi_pkg is
   procedure disable_colors is
   begin
     set(colors_enabled, 1, '0');
-  end;
+  end procedure;
 
   procedure enable_colors is
   begin
     set(colors_enabled, 1, '1');
-  end;
+  end procedure;
 
 end package body;
