@@ -120,7 +120,7 @@ package body ansi_pkg is
     variable len : natural := 0;
   begin
     while idx <= msg'high loop
-      if msg(idx) = character'val(27) then
+      if msg(idx) = character'(ESC) then
         idx := idx + 1;
 
         while idx <= msg'high and msg(idx) /= 'm' loop
@@ -152,7 +152,7 @@ package body ansi_pkg is
   impure function strip_color(msg : string) return string is
   begin
     for i in msg'low to msg'high loop
-      if msg(i) = character'val(27) then
+      if msg(i) = character'(ESC) then
         return msg(msg'low to i-1) & drop_color(msg(i+1 to msg'high));
       end if;
     end loop;
@@ -182,7 +182,7 @@ package body ansi_pkg is
                               style : ansi_style_t := normal) return string is
   begin
     if colors_are_enabled then
-      return (character'val(27) & '[' &
+      return (character'(ESC) & '[' &
               integer'image(style_to_code(style)) & ';' &
               integer'image(color_to_code(fg)) & ';' &
               integer'image(color_to_code(bg)+10) & 'm');
@@ -194,7 +194,7 @@ package body ansi_pkg is
   impure function color_end return string is
   begin
     if colors_are_enabled then
-      return character'val(27) & '[' & integer'image(0) & 'm';
+      return character'(ESC) & '[' & integer'image(0) & 'm';
     else
       return "";
     end if;
