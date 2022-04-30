@@ -108,7 +108,7 @@ package body ansi_pkg is
     normal => 22);
 
   impure function colorize(msg : string;
-                    colors : ansi_colors_t := no_colors) return string is
+                           colors : ansi_colors_t := no_colors) return string is
   begin
     return colorize(msg, fg => colors.fg, bg => colors.bg, style => colors.style);
   end function;
@@ -192,7 +192,7 @@ package body ansi_pkg is
   impure function color_end return string is
   begin
     if colors_are_enabled then
-      return character'(ESC) & '[' & integer'image(0) & 'm';
+      return character'(ESC) & "[0m";
     else
       return "";
     end if;
