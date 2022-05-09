@@ -18,9 +18,9 @@ end package;
 package body path is
   pure function "/" (lp, rp : string) return string is
   begin
-    if lp'length = 0 then
+    if lp'length = 0 and rp /= "/" then
       return rstrip(rp, "/\");
-    elsif rp'length = 0 then
+    elsif rp'length = 0 and lp /= "/" then
       return rstrip(lp, "/\");
     else
       return rstrip(lp, "/\") & "/" & rstrip(rp, "/\");
