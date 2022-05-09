@@ -10,55 +10,25 @@ use work.string_ops.all;
 use std.textio.all;
 
 package path is
-  function join (
-    constant p1 : string;
-    constant p2 : string := "";
-    constant p3 : string := "";
-    constant p4 : string := "";
-    constant p5 : string := "";
-    constant p6 : string := "";
-    constant p7 : string := "";
-    constant p8 : string := "";
-    constant p9 : string := "";
-    constant p10 : string := "")
-    return string;
+  pure function "/" (lp, rp : string) return string;
+
+  pure function join (p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 : string := "") return string;
 end package;
 
 package body path is
-  function join (
-    constant p1 : string;
-    constant p2 : string := "";
-    constant p3 : string := "";
-    constant p4 : string := "";
-    constant p5 : string := "";
-    constant p6 : string := "";
-    constant p7 : string := "";
-    constant p8 : string := "";
-    constant p9 : string := "";
-    constant p10 : string := "")
-    return string is
-    variable inputs : work.string_ops.line_vector(1 to 10);
-    variable result : line;
+  pure function "/" (lp, rp : string) return string is
   begin
-    write(inputs(1), p1);
-    write(inputs(2), p2);
-    write(inputs(3), p3);
-    write(inputs(4), p4);
-    write(inputs(5), p5);
-    write(inputs(6), p6);
-    write(inputs(7), p7);
-    write(inputs(8), p8);
-    write(inputs(9), p9);
-    write(inputs(10), p10);
+    if lp'length = 0 then
+      return rstrip(rp, "/\");
+    elsif rp'length = 0 then
+      return rstrip(lp, "/\");
+    else
+      return rstrip(lp, "/\") & "/" & rstrip(rp, "/\");
+    end if;
+  end function;
 
-    write(result, string'(""));
-    for i in 1 to 10 loop
-      if rstrip(inputs(i).all, "/\") /= "" then
-        write(result, rstrip(inputs(i).all, "/\") & "/");
-      end if;
-      deallocate(inputs(i));
-    end loop;
-
-    return rstrip(result.all, "/");
-  end;
+  pure function join (p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 : string := "") return string is
+  begin
+    return p1 / p2 / p3 / p4 / p5 / p6 / p7 / p8 / p9 / p10;
+  end function;
 end package body;
