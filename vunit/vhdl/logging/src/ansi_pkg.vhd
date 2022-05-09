@@ -9,11 +9,16 @@ use std.textio.all;
 library vunit_lib;
 use vunit_lib.string_ptr_pkg.all;
 
+
 package ansi_pkg is
 
+  -----------------------------------------------------------------------------
+  -- Public types
+  -----------------------------------------------------------------------------
   type ansi_color_t is (
+    -- Default foreground
     no_color,
-
+    -- Standard foregrounds
     black,
     red,
     green,
@@ -22,7 +27,6 @@ package ansi_pkg is
     magenta,
     cyan,
     white,
-
     -- Non standard foregrounds
     lightblack,
     lightred,
@@ -34,8 +38,8 @@ package ansi_pkg is
     lightwhite);
 
   type ansi_style_t is (
-    dim,
     normal,
+    dim,
     bright);
 
   type ansi_colors_t is record
@@ -43,45 +47,63 @@ package ansi_pkg is
     bg : ansi_color_t;
     style : ansi_style_t;
   end record;
+
+
+  -----------------------------------------------------------------------------
+  -- Public constants
+  -----------------------------------------------------------------------------
   constant no_colors : ansi_colors_t := (fg => no_color, bg => no_color, style => normal);
+
+
+  -----------------------------------------------------------------------------
+  -- Public subprograms
+  -----------------------------------------------------------------------------
+  procedure disable_colors;
+
+  procedure enable_colors;
 
   impure function colorize(msg : string;
                            colors : ansi_colors_t := no_colors) return string;
 
   impure function colorize(msg : string;
-                           fg : ansi_color_t := no_color;
-                           bg : ansi_color_t := no_color;
-                           style : ansi_style_t := normal) return string;
+                           fg : ansi_color_t := no_colors.fg;
+                           bg : ansi_color_t := no_colors.bg;
+                           style : ansi_style_t := no_colors.style) return string;
 
   impure function strip_color(msg : string) return string;
+
   impure function length_without_color(msg : string) return natural;
 
-  impure function color_start(fg : ansi_color_t := no_color;
-                              bg : ansi_color_t := no_color;
-                              style : ansi_style_t := normal) return string;
+
+  -----------------------------------------------------------------------------
+  -- Deprecated as public, should be private subprograms
+  -----------------------------------------------------------------------------
+  impure function color_start(fg : ansi_color_t := no_colors.fg;
+                              bg : ansi_color_t := no_colors.bg;
+                              style : ansi_style_t := no_colors.style) return string;
 
   impure function color_start(colors : ansi_colors_t := no_colors) return string;
 
   impure function color_end return string;
 
-  procedure disable_colors;
-  procedure enable_colors;
-
 end package;
+
 
 package body ansi_pkg is
 
-  constant colors_enabled : string_ptr_t := new_string_ptr("0");
-
-  impure function colors_are_enabled return boolean is
-  begin
-    return get(colors_enabled, 1) = '1';
-  end function;
-
+  -----------------------------------------------------------------------------
+  -- Private types
+  -----------------------------------------------------------------------------
   type color_to_code_t is array (ansi_color_t range <>) of integer;
   type style_to_code_t is array (ansi_style_t range <>) of integer;
 
-  constant color_to_code : color_to_code_t := (
+
+  -----------------------------------------------------------------------------
+  -- Private constants
+  -----------------------------------------------------------------------------
+  constant colors_enabled : string_ptr_t := new_string_ptr("0");
+
+  constant foreground_color_to_code : color_to_code_t := (
     no_color => 39,
     black => 30,
     red => 31,
@@ -91,8 +113,6 @@ package body ansi_pkg is
     magenta => 35,
     cyan => 36,
     white => 37,
-
-    -- Non standard foregrounds
     lightblack => 90,
     lightred => 91,
     lightgreen => 92,
@@ -102,15 +122,96 @@ package body ansi_pkg is
     lightcyan => 96,
     lightwhite => 97);
 
+  constant background_color_to_code : color_to_code_t := (
+    no_color => 49,
+    black => 40,
+    red => 41,
+    green => 42,
+    yellow => 43,
+    blue => 44,
+    magenta => 45,
+    cyan => 46,
+    white => 47,
+    lightblack => 100,
+    lightred => 101,
+    lightgreen => 102,
+    lightyellow => 103,
+    lightblue => 104,
+    lightmagenta => 105,
+    lightcyan => 106,
+    lightwhite => 107);
+
   constant style_to_code : style_to_code_t := (
-    bright => 1,
+    normal => 22,
     dim => 2,
-    normal => 22);
+    bright => 1);
+
+  -----------------------------------------------------------------------------
+  -- Private subprograms
+  -----------------------------------------------------------------------------
+  impure function colors_are_enabled return boolean is
+  begin
+    return get(colors_enabled, 1) = '1';
+  end function;
+
+  impure function color_start(colors : ansi_colors_t := no_colors) return string is
+  begin
+    return color_start(fg => colors.fg, bg => colors.bg, style => colors.style);
+  end function;
+
+  impure function color_start(fg : ansi_color_t := no_colors.fg;
+                              bg : ansi_color_t := no_colors.bg;
+                              style : ansi_style_t := no_colors.style) return string is
+  begin
+    if colors_are_enabled then
+      return (character'(ESC) & '[' &
+              integer'image(style_to_code(style)) & ';' &
+              integer'image(foreground_color_to_code(fg)) & ';' &
+              integer'image(background_color_to_code(bg)) & 'm');
+    else
+      return "";
+    end if;
+  end function;
+
+  impure function color_end return string is
+  begin
+    if colors_are_enabled then
+      return character'(ESC) & "[0m";
+    else
+      return "";
+    end if;
+  end function;
+
+
+  -----------------------------------------------------------------------------
+  -- Public subprograms
+  -----------------------------------------------------------------------------
+  procedure disable_colors is
+  begin
+    set(colors_enabled, 1, '0');
+  end procedure;
+
+  procedure enable_colors is
+  begin
+    set(colors_enabled, 1, '1');
+  end procedure;
 
   impure function colorize(msg : string;
                            colors : ansi_colors_t := no_colors) return string is
   begin
-    return colorize(msg, fg => colors.fg, bg => colors.bg, style => colors.style);
+    if colors = no_colors then
+      return msg;
+    else
+      return color_start(colors.fg, colors.bg, colors.style) & msg & color_end;
+    end if;
+  end function;
+
+  impure function colorize(msg : string;
+                           fg : ansi_color_t := no_colors.fg;
+                           bg : ansi_color_t := no_colors.bg;
+                           style : ansi_style_t := no_colors.style) return string is
+  begin
+    return colorize(msg, (fg, bg, style));
   end function;
 
   impure function length_without_color(msg : string) return natural is
@@ -157,55 +258,5 @@ package body ansi_pkg is
 
     return msg;
   end function;
-
-  impure function colorize(msg : string;
-                           fg : ansi_color_t := no_color;
-                           bg : ansi_color_t := no_color;
-                           style : ansi_style_t := normal) return string is
-  begin
-    if fg = no_color and bg = no_color and style = normal then
-      return msg;
-    else
-      return color_start(fg, bg, style) & msg & color_end;
-    end if;
-  end function;
-
-  impure function color_start(colors : ansi_colors_t := no_colors) return string is
-  begin
-    return color_start(fg => colors.fg, bg => colors.bg, style => colors.style);
-  end function;
-
-  impure function color_start(fg : ansi_color_t := no_color;
-                              bg : ansi_color_t := no_color;
-                              style : ansi_style_t := normal) return string is
-  begin
-    if colors_are_enabled then
-      return (character'(ESC) & '[' &
-              integer'image(style_to_code(style)) & ';' &
-              integer'image(color_to_code(fg)) & ';' &
-              integer'image(color_to_code(bg)+10) & 'm');
-    else
-      return "";
-    end if;
-  end function;
-
-  impure function color_end return string is
-  begin
-    if colors_are_enabled then
-      return character'(ESC) & "[0m";
-    else
-      return "";
-    end if;
-  end function;
-
-  procedure disable_colors is
-  begin
-    set(colors_enabled, 1, '0');
-  end procedure;
-
-  procedure enable_colors is
-  begin
-    set(colors_enabled, 1, '1');
-  end procedure;
 
 end package body;

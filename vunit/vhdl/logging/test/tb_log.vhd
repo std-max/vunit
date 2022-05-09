@@ -16,6 +16,8 @@ use work.log_handler_pkg.all;
 use work.core_pkg.all;
 use work.test_support_pkg.all;
 use work.print_pkg.all;
+use work.ansi_pkg.all;
+use vunit_lib.check_pkg.all;
 
 entity tb_log is
   generic (
@@ -23,6 +25,29 @@ entity tb_log is
 end entity;
 
 architecture a of tb_log is
+
+
+
+  procedure ansi_color_demo is
+    variable l : line;
+  begin
+    for bg in ansi_color_t'low to ansi_color_t'high loop
+      write(l, colorize("bg=" & ansi_color_t'image(bg), bg => bg));
+      writeline(output, l);
+    end loop;
+
+    for style in ansi_style_t'low to ansi_style_t'high loop
+      for fg in ansi_color_t'low to ansi_color_t'high loop
+        write(l, colorize(
+          "fg=" & ansi_color_t'image(fg) & ", " &
+          "style=" & ansi_style_t'image(style),
+          fg => fg, style => style));
+        writeline(output, l);
+      end loop;
+    end loop;
+
+  end procedure;
+
 begin
   main : process
     constant main_path : string := main'instance_name;
@@ -89,6 +114,8 @@ begin
     variable tmp : integer;
     file fptr : text;
     variable status : file_open_status;
+
+    variable l : line;
 
     procedure perform_logging(logger : logger_t) is
     begin
@@ -890,6 +917,22 @@ begin
 
        check_log_file(file_handlers(i), log_file_name & integer'image(i), entries);
      end loop;
+
+    elsif run("test color") then
+      ansi_color_demo;
+      check_equal(0, 0);
+
+      write(l, colorize(
+        "fg=" & ansi_color_t'image(red) & ", " &
+        "style=" & ansi_style_t'image(normal),
+        fg => red, style => normal));
+      writeline(output, l);
+
+      write(l, colorize(
+        "fg=" & ansi_color_t'image(lightred) & ", " &
+        "style=" & ansi_style_t'image(normal),
+        fg => red, style => bright));
+      writeline(output, l);
 
     end if;
 
