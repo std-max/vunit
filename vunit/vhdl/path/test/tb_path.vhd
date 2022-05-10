@@ -22,8 +22,11 @@ begin
     test_runner_setup(runner, runner_cfg);
 
     while test_suite loop
-      if run("Test joining paths") then
+      if run("Test joining paths using path function") then
+        check_equal(join, "");
         check_equal(join(""), "");
+        check_equal(join("/"), "/");
+        check_equal(join("/", "/"), "/");
         check_equal(join("", "p2"), "p2");
         check_equal(join("p1"), "p1");
         check_equal(join("p1", p5 => "p5", p10 => "p10"), "p1/p5/p10");
@@ -31,6 +34,15 @@ begin
                          "p1/p2/p3/p4/p5/p6/p7/p8/p9/p10");
       elsif run("Verify that a separator ending a path component is ignored") then
         check_equal(join("/p1/", "p2/", "p3", "/", "p4"), "/p1/p2/p3/p4");
+      elsif run("Test joining paths with / operator") then
+        check_equal("" / "", "");
+        check_equal("/p1/" / "p2/", "/p1/p2");
+        check_equal("p1" / "p2" / "p3" / "p4", "p1/p2/p3/p4");
+      elsif run("Test joining paths with / operator where the right operand starts with a /") then
+        check_equal("/" / "/", "/");
+        check_equal("p1" / "/", "/");
+        check_equal("/p1" / "/", "/");
+        check_equal("p1" / "/p2", "/p2");
       end if;
     end loop;
 

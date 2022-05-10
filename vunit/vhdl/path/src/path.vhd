@@ -23,7 +23,11 @@ package body path is
     elsif rp'length = 0 and lp /= "/" then
       return rstrip(lp, "/\");
     else
-      return rstrip(lp, "/\") & "/" & rstrip(rp, "/\");
+      if rp(rp'left) = '/' then
+        return rp;
+      else
+        return rstrip(lp, "/\") & "/" & rstrip(rp, "/\");
+      end if;
     end if;
   end function;
 
